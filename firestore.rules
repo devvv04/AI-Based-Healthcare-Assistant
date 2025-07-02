@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Allow read/write access only to authenticated users
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Allow users to read/write their own user document
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Example: Allow users to read/write their own appointments
+    match /appointments/{appointmentId} {
+      allow read, write: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Example: Allow users to read/write their own diagnosis records
+    match /diagnosis/{diagnosisId} {
+      allow read, write: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
